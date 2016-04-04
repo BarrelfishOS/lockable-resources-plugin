@@ -110,18 +110,25 @@ public class LockableResourcesRootAction implements RootAction {
 		throws IOException, ServletException {
 		Jenkins.getInstance().checkPermission(RESERVE);
 
-		String name = req.getParameter("resource");
-		LockableResource r = LockableResourcesManager.get().fromName(name);
-		if (r == null) {
-			rsp.sendError(404, "Resource not found " + name);
+		String[] names = req.getParameterValues("resource");
+		if (names == null) {
+			rsp.sendError(404, "No resource supplied");
 			return;
 		}
 
 		List<LockableResource> resources = new ArrayList<LockableResource>();
-		resources.add(r);
 		String userName = getUserName();
-		if (userName != null)
-			LockableResourcesManager.get().reserve(resources, userName);
+		resources.add(null);
+		for (String name : names) {
+			LockableResource r = LockableResourcesManager.get().fromName(name);
+			if (r == null) {
+				rsp.sendError(404, "Resource not found " + name);
+				return;
+			}
+			resources.set(0, r);
+			if (userName != null)
+				LockableResourcesManager.get().reserve(resources, userName);
+		}
 
 		rsp.forwardToPreviousPage(req);
 	}
@@ -130,22 +137,30 @@ public class LockableResourcesRootAction implements RootAction {
 		throws IOException, ServletException {
 		Jenkins.getInstance().checkPermission(RESERVE);
 
-		String name = req.getParameter("resource");
-		LockableResource r = LockableResourcesManager.get().fromName(name);
-		if (r == null) {
-			rsp.sendError(404, "Resource not found " + name);
+		String[] names = req.getParameterValues("resource");
+		if (names == null) {
+			rsp.sendError(404, "No resource supplied");
 			return;
 		}
 
+		List<LockableResource> resources = new ArrayList<LockableResource>();
+		resources.add(null);
 		String userName = getUserName();
-		if ((userName == null || !userName.equals(r.getReservedBy()))
-				&& !Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER))
+		if (userName == null)
 			throw new AccessDeniedException2(Jenkins.getAuthentication(),
 					RESERVE);
+		for (String name : names) {
+			LockableResource r = LockableResourcesManager.get().fromName(name);
+			if (r == null) {
+				rsp.sendError(404, "Resource not found " + name);
+				return;
+			}
+			resources.set(0, r);
+			if (userName.equals(r.getReservedBy()) ||
+			    Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER))
+				LockableResourcesManager.get().unreserve(resources);
+		}
 
-		List<LockableResource> resources = new ArrayList<LockableResource>();
-		resources.add(r);
-		LockableResourcesManager.get().unreserve(resources);
 
 		rsp.forwardToPreviousPage(req);
 	}
