@@ -179,8 +179,13 @@ public class LockableResourcesRootAction implements RootAction {
 		for (int i = 0; i < resources.size(); i++) {
 			LockableResource r = resources.get(i);
 			if (r.getReservedBy() != null)
-				resp.format("\"%1$s\": \"%2$s\"",
+				resp.format("\"%1$s\": { \"rsvd\": \"%2$s\"," +
+						" \"locked\": null }",
 					    r.getName(), r.getReservedBy());
+			else if (r.getBuildName() != null)
+				resp.format("\"%1$s\": { \"rsvd\": null," +
+						" \"locked\": \"%2$s\" }",
+					    r.getName(), r.getBuildName());
 			else
 				resp.format("\"%1$s\": null", r.getName());
 
