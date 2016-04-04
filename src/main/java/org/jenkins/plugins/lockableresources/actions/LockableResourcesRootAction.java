@@ -17,6 +17,7 @@ import hudson.security.PermissionGroup;
 import hudson.security.PermissionScope;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -163,6 +164,33 @@ public class LockableResourcesRootAction implements RootAction {
 
 
 		rsp.forwardToPreviousPage(req);
+	}
+
+	public void doGetstate(StaplerRequest req, StaplerResponse rsp)
+		throws IOException, ServletException {
+		Jenkins.getInstance().checkPermission(RESERVE);
+
+		PrintWriter resp = rsp.getWriter();
+		resp.append('{');
+		resp.append(' ');
+		List<LockableResource> resources =
+			LockableResourcesManager.get().getResources();
+
+		for (int i = 0; i < resources.size(); i++) {
+			LockableResource r = resources.get(i);
+			if (r.getReservedBy() != null)
+				resp.format("\"%1$s\": \"%2$s\"",
+					    r.getName(), r.getReservedBy());
+			else
+				resp.format("\"%1$s\": null", r.getName());
+
+			if (i < resources.size() - 1) {
+				resp.append(',');
+				resp.append(' ');
+			}
+		}
+		resp.append(' ');
+		resp.append('}');
 	}
 
 	public void doReset(StaplerRequest req, StaplerResponse rsp)
