@@ -64,6 +64,8 @@ public class LockableResource extends AbstractDescribableImpl<LockableResource> 
 	private String description = "";
 	private String labels = "";
 	private String reservedBy = null;
+	private String reservationTime = null;
+	private String reservedOnBehalf = null;
 
 	private long queueItemId = NOT_QUEUED;
 	private String queueItemProject = null;
@@ -312,6 +314,8 @@ public class LockableResource extends AbstractDescribableImpl<LockableResource> 
 
 	public void unReserve() {
 		this.reservedBy = null;
+		this.reservationTime = null;
+		this.reservedOnBehalf = null;
 	}
 
 	public void reset() {
@@ -348,6 +352,22 @@ public class LockableResource extends AbstractDescribableImpl<LockableResource> 
 		} else if (!name.equals(other.name))
 			return false;
 		return true;
+	}
+
+	public String getReservationTime() {
+		return reservationTime;
+	}
+
+	public void setReservationTime(String reservationTime) {
+		this.reservationTime = reservationTime;
+	}
+
+	public String getReservedOnBehalf() {
+		return reservedOnBehalf;
+	}
+
+	public void setReservedOnBehalf(String reservedOnBehalf) {
+		this.reservedOnBehalf = reservedOnBehalf;
 	}
 
 	@Extension

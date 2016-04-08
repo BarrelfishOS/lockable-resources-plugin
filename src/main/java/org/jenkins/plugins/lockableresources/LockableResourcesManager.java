@@ -16,6 +16,7 @@ import hudson.model.Run;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -25,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.text.SimpleDateFormat;
 
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
@@ -491,7 +493,7 @@ public class LockableResourcesManager extends GlobalConfiguration {
 	}
 
 	public synchronized boolean reserve(List<LockableResource> resources,
-			String userName) {
+			String userName, String onBehalf) {
 		for (LockableResource r : resources) {
 			if (r.isReserved() || r.isLocked() || r.isQueued()) {
 				return false;
@@ -499,6 +501,11 @@ public class LockableResourcesManager extends GlobalConfiguration {
 		}
 		for (LockableResource r : resources) {
 			r.setReservedBy(userName);
+			String rt = new SimpleDateFormat("yyyy-MM-dd HH:mm")
+							.format(Calendar.getInstance().getTime());
+			r.setReservationTime(rt);
+			if (onBehalf != null && !onBehalf.equals(userName))
+				r.setReservedOnBehalf(onBehalf);
 		}
 		save();
 		return true;

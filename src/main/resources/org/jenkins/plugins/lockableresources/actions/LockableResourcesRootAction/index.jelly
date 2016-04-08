@@ -16,7 +16,7 @@
 	<l:layout title="${it.displayName}">
 		<l:main-panel>
 			<h1>${%Lockable Resources}</h1>
-			<table class="pane" style="width: 50%;">
+			<table class="pane" style="width: 60%;">
 				<tbody>
 					<tr>
 						<td class="pane-header">Resource</td>
@@ -62,6 +62,8 @@ function reset_resource_${i}() {
 	<j:if test="${resource.reservedBy != null}">
 						<td class="pane" style="color: red;">
 							<strong>RESERVED</strong> by <strong>${resource.reservedBy}</strong>
+							<j:if test="${resource.reservedOnBehalf != null}"> on behalf of <strong>${resource.reservedOnBehalf}</strong></j:if><br/>
+							Reservation time: ${resource.reservationTime}
 						</td>
 						<td class="pane">${resource.labels}</td>
 						<td class="pane">
@@ -103,7 +105,7 @@ function reset_resource_${i}() {
 			</table>
 <j:if test="${it.getNumberOfAllLabels() != 0}">
 			<h3>Labels</h3>
-			<table class="pane" style="width: 50%;">
+			<table class="pane" style="width: 60%;">
 				<tbody>
 					<tr>
 						<td class="pane-header">Label</td>

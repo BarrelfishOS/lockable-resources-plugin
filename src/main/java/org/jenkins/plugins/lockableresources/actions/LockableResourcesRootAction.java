@@ -111,6 +111,27 @@ public class LockableResourcesRootAction implements RootAction {
 		throws IOException, ServletException {
 		Jenkins.getInstance().checkPermission(RESERVE);
 
+		String name = req.getParameter("resource");
+		String onBehalf = req.getParameter("for");
+		LockableResource r = LockableResourcesManager.get().fromName(name);
+		if (r == null) {
+			rsp.sendError(404, "Resource not found " + name);
+			return;
+		}
+
+		List<LockableResource> resources = new ArrayList<LockableResource>();
+		resources.add(r);
+		String userName = getUserName();
+		if (userName != null)
+			LockableResourcesManager.get().reserve(resources, userName, onBehalf);
+
+		rsp.forwardToPreviousPage(req);
+	}
+
+	public void doMultireserve(StaplerRequest req, StaplerResponse rsp)
+			throws IOException, ServletException {
+		Jenkins.getInstance().checkPermission(RESERVE);
+
 		String[] names = req.getParameterValues("resource");
 		if (names == null) {
 			rsp.sendError(404, "No resource supplied");
@@ -128,7 +149,7 @@ public class LockableResourcesRootAction implements RootAction {
 			}
 			resources.set(0, r);
 			if (userName != null)
-				LockableResourcesManager.get().reserve(resources, userName);
+				LockableResourcesManager.get().reserve(resources, userName, userName);
 		}
 
 		rsp.forwardToPreviousPage(req);
@@ -179,12 +200,10 @@ public class LockableResourcesRootAction implements RootAction {
 		for (int i = 0; i < resources.size(); i++) {
 			LockableResource r = resources.get(i);
 			if (r.getReservedBy() != null)
-				resp.format("\"%1$s\": { \"rsvd\": \"%2$s\"," +
-						" \"locked\": null }",
-					    r.getName(), r.getReservedBy());
+				resp.format("\"%1$s\": { \"rsvd\": \"%2$s\",  \"acquired\": \"%3$s\", \"locked\": null }",
+					    r.getName(), r.getReservedBy(), r.getReservationTime());
 			else if (r.getBuildName() != null)
-				resp.format("\"%1$s\": { \"rsvd\": null," +
-						" \"locked\": \"%2$s\" }",
+				resp.format("\"%1$s\": { \"rsvd\": null, \"locked\": \"%2$s\" }",
 					    r.getName(), r.getBuildName());
 			else
 				resp.format("\"%1$s\": null", r.getName());
