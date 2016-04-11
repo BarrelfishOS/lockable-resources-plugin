@@ -56,7 +56,7 @@ public class LockableResourceTest {
 
 	@Before
 	public void setUp() {
-		this.instance = new LockableResource("r1", "d1", "l1 l2", "");
+		this.instance = new LockableResource("r1", "d1", "l1 l2", "", "", "");
 	}
 
 	@After
