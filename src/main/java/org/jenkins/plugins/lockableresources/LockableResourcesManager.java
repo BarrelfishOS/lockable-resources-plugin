@@ -494,15 +494,19 @@ public class LockableResourcesManager extends GlobalConfiguration {
 
 	public synchronized boolean reserve(List<LockableResource> resources,
 			String userName, String onBehalf) {
+		String rt = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(Calendar.getInstance().getTime());
 		for (LockableResource r : resources) {
+			// XXX: we should distinguish between jobs and external scripts trying to reserve machines
+			if (r.isReserved() && onBehalf != null && !onBehalf.equals(r.getReservedOnBehalf())) {
+				r.setReservedOnBehalf(onBehalf);
+				r.setReservationTime(rt);
+			}
 			if (r.isReserved() || r.isLocked() || r.isQueued()) {
 				return false;
 			}
 		}
 		for (LockableResource r : resources) {
 			r.setReservedBy(userName);
-			String rt = new SimpleDateFormat("yyyy-MM-dd HH:mm")
-							.format(Calendar.getInstance().getTime());
 			r.setReservationTime(rt);
 			if (onBehalf != null && !onBehalf.equals(userName))
 				r.setReservedOnBehalf(onBehalf);

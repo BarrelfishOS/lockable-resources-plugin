@@ -199,12 +199,20 @@ public class LockableResourcesRootAction implements RootAction {
 
 		for (int i = 0; i < resources.size(); i++) {
 			LockableResource r = resources.get(i);
-			if (r.getReservedBy() != null)
-				resp.format("\"%1$s\": { \"rsvd\": \"%2$s\",  \"acquired\": \"%3$s\", \"locked\": null }",
-					    r.getName(), r.getReservedBy(), r.getReservationTime());
+			if (r.getReservedBy() != null) {
+				if (r.getReservedOnBehalf() != null)
+					resp.format("\"%1$s\": { \"rsvd\": \"%2$s\", \"user\": \"%3$s\",  \"acquired\": \"%4$s\", \"locked\": null }",
+							r.getName(), r.getReservedBy(), r.getReservedOnBehalf(), r.getReservationTime());
+				else
+					resp.format("\"%1$s\": { \"rsvd\": \"%2$s\", \"acquired\": \"%3$s\", \"locked\": null }",
+							r.getName(), r.getReservedBy(), r.getReservationTime());
+			}
 			else if (r.getBuildName() != null)
 				resp.format("\"%1$s\": { \"rsvd\": null, \"locked\": \"%2$s\" }",
 					    r.getName(), r.getBuildName());
+			else if (r.isQueued())
+				resp.format("\"%1$s\": { \"rsvd\": null, \"locked\": null, \"queued\" \"%2$s\" }",
+						r.getName(), r.getQueueItemProject());
 			else
 				resp.format("\"%1$s\": null", r.getName());
 
