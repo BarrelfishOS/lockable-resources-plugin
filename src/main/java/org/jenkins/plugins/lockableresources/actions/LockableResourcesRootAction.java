@@ -211,7 +211,7 @@ public class LockableResourcesRootAction implements RootAction {
 				resp.format("\"%1$s\": { \"rsvd\": null, \"locked\": \"%2$s\" }",
 					    r.getName(), r.getBuildName());
 			else if (r.isQueued())
-				resp.format("\"%1$s\": { \"rsvd\": null, \"locked\": null, \"queued\" \"%2$s\" }",
+				resp.format("\"%1$s\": { \"rsvd\": null, \"locked\": null, \"queued\": \"%2$s\" }",
 						r.getName(), r.getQueueItemProject());
 			else
 				resp.format("\"%1$s\": null", r.getName());
