@@ -8,7 +8,7 @@ for more details.
 
 ## Building
 
-You can run a test instance of Jenkins by invoking
+You can run a Jenkins test instance which loads the plugin automatically by invoking
 
 ```
 $ export MAVEN_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n"
