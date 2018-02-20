@@ -485,7 +485,7 @@ public class LockableResourcesManager extends GlobalConfiguration {
 	public synchronized boolean createResourceWithLabel(String name, String label) {
 		LockableResource existent = fromName(name);
 		if (existent == null) {
-			getResources().add(new LockableResource(name, "", label, null));
+			getResources().add(new LockableResource(name, label));
 			save();
 			return true;
 		}

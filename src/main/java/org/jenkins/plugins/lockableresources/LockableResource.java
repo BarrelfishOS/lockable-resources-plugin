@@ -94,6 +94,12 @@ public class LockableResource extends AbstractDescribableImpl<LockableResource> 
 		this.reservedOnBehalf = Util.fixEmptyAndTrim(reservedOnBehalf);
 	}
 
+	@Deprecated
+	public LockableResource(String name, String labels) {
+		this.name = name;
+		this.labels = labels;
+	}
+
 	@DataBoundConstructor
 	public LockableResource(String name) {
 		this.name = name;
