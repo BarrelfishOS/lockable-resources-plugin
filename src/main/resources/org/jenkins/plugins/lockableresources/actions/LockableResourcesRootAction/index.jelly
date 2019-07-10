@@ -1,10 +1,8 @@
 <!--
   Copyright 2013, 6WIND S.A. All rights reserved.
   Copyright 2019, TobiX
-
   This file is part of the Jenkins Lockable Resources Plugin and is
   published under the MIT license.
-
   See the "LICENSE.txt" file for more information.
  -->
 <?jelly escape-by-default='true'?>
@@ -61,6 +59,8 @@
                     <strong>RESERVED</strong>
                     by
                     <strong>${resource.reservedBy}</strong>
+                    <j:if test="${resource.reservedOnBehalf != null}"> on behalf of <strong>${resource.reservedOnBehalf}</strong></j:if><br/>
+                    Reservation time: ${resource.reservationTime}
                   </td>
                   <td class="pane">${resource.labels}</td>
                   <td class="pane">

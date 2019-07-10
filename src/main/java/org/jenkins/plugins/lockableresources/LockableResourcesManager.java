@@ -15,6 +15,7 @@ import hudson.model.Run;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -24,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.text.SimpleDateFormat;
 
 import hudson.model.TaskListener;
 import jenkins.model.GlobalConfiguration;
@@ -505,7 +507,9 @@ public class LockableResourcesManager extends GlobalConfiguration {
 		if (name !=null && label !=null) {
 			LockableResource existent = fromName(name);
 			if (existent == null) {
-				getResources().add(new LockableResource(name, "", label, null));
+				LockableResource lr = new LockableResource(name);
+				lr.setLabels(label);
+				getResources().add(lr);
 				save();
 				return true;
 			}
@@ -514,14 +518,23 @@ public class LockableResourcesManager extends GlobalConfiguration {
 	}
 
 	public synchronized boolean reserve(List<LockableResource> resources,
-			String userName) {
+			String userName, String onBehalf) {
+		String rt = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(Calendar.getInstance().getTime());
 		for (LockableResource r : resources) {
+			// XXX: we should distinguish between jobs and external scripts trying to reserve machines
+			if (r.isReserved() && onBehalf != null && !onBehalf.equals(r.getReservedOnBehalf())) {
+				r.setReservedOnBehalf(onBehalf);
+				r.setReservationTime(rt);
+			}
 			if (r.isReserved() || r.isLocked() || r.isQueued()) {
 				return false;
 			}
 		}
 		for (LockableResource r : resources) {
 			r.setReservedBy(userName);
+			r.setReservationTime(rt);
+			if (onBehalf != null && !onBehalf.equals(userName))
+				r.setReservedOnBehalf(onBehalf);
 		}
 		save();
 		return true;

@@ -59,6 +59,8 @@ public class LockableResource extends AbstractDescribableImpl<LockableResource> 
 	private String description = "";
 	private String labels = "";
 	private String reservedBy = null;
+	private String reservationTime = null;
+	private String reservedOnBehalf = null;
 
 	private long queueItemId = NOT_QUEUED;
 	private String queueItemProject = null;
@@ -77,11 +79,20 @@ public class LockableResource extends AbstractDescribableImpl<LockableResource> 
 
 	@Deprecated
 	public LockableResource(
-			String name, String description, String labels, String reservedBy) {
+			String name, String description, String labels, String reservedBy,
+			String reservationTime, String reservedOnBehalf) {
 		this.name = name;
 		this.description = description;
 		this.labels = labels;
 		this.reservedBy = Util.fixEmptyAndTrim(reservedBy);
+		this.reservationTime = Util.fixEmptyAndTrim(reservationTime);
+		this.reservedOnBehalf = Util.fixEmptyAndTrim(reservedOnBehalf);
+	}
+
+	@Deprecated
+	public LockableResource(String name, String labels) {
+		this.name = name;
+		this.labels = labels;
 	}
 
 	@DataBoundConstructor
@@ -307,6 +318,8 @@ public class LockableResource extends AbstractDescribableImpl<LockableResource> 
 
 	public void unReserve() {
 		this.reservedBy = null;
+		this.reservationTime = null;
+		this.reservedOnBehalf = null;
 	}
 
 	public void reset() {
@@ -343,6 +356,22 @@ public class LockableResource extends AbstractDescribableImpl<LockableResource> 
 		} else if (!name.equals(other.name))
 			return false;
 		return true;
+	}
+
+	public String getReservationTime() {
+		return reservationTime;
+	}
+
+	public void setReservationTime(String reservationTime) {
+		this.reservationTime = reservationTime;
+	}
+
+	public String getReservedOnBehalf() {
+		return reservedOnBehalf;
+	}
+
+	public void setReservedOnBehalf(String reservedOnBehalf) {
+		this.reservedOnBehalf = reservedOnBehalf;
 	}
 
 	@Extension

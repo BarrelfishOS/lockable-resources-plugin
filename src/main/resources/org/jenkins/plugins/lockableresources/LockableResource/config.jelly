@@ -23,4 +23,10 @@
 	<f:entry title="${%Reserved by}" field="reservedBy">
 		<f:textbox/>
 	</f:entry>
+	<f:entry title="${%Reserved on behalf}" field="reservedOnBehalf">
+		<f:textbox/>
+	</f:entry>
+	<f:entry title="${%Reservation time}" field="reservationTime">
+		<f:textbox/>
+	</f:entry>
 </j:jelly>
