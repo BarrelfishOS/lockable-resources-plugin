@@ -2,9 +2,14 @@
 
 ## Environment
 
-You need Maven 3 and a JDK 6.0 or later. See the 
+You need Maven 3 and a JDK 8.0 or later. See the 
 [Jenkins wiki](https://wiki.jenkins.io/display/JENKINS/Plugin+tutorial#Plugintutorial-SettingUpEnvironment) 
 for more details.
+
+Set the JAVA HOME variable 
+```
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
+```
 
 ## Building
 

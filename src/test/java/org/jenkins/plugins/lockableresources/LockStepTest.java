@@ -1,15 +1,13 @@
 package org.jenkins.plugins.lockableresources;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
 
 import hudson.Functions;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.model.FreeStyleProject;
-import hudson.model.Result;
+import hudson.model.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +38,32 @@ public class LockStepTest extends LockStepTestBase {
     j.waitForCompletion(b1);
     j.assertBuildStatus(Result.SUCCESS, b1);
     j.assertLogContains("Resource [resource1] did not exist. Created.", b1);
+
+    assertNull(LockableResourcesManager.get().fromName("resource1"));
+  }
+
+  @Test
+  public void autoCreateResourceFreeStyle() throws IOException, InterruptedException {
+    FreeStyleProject f = j.createFreeStyleProject("f");
+    f.addProperty(new RequiredResourcesProperty("resource1", null, null, null, null));
+
+    f.scheduleBuild2(0);
+
+    while (j.jenkins.getQueue().getItems().length != 1) {
+      System.out.println("Waiting for freestyle to be queued...");
+      Thread.sleep(1000);
+    }
+
+    FreeStyleBuild fb1 = null;
+    while ((fb1 = f.getBuildByNumber(1)) == null) {
+      System.out.println("Waiting for freestyle #1 to start building...");
+      Thread.sleep(1000);
+    }
+
+    j.waitForMessage("acquired lock on [resource1]", fb1);
+    j.waitForCompletion(fb1);
+
+    assertNull(LockableResourcesManager.get().fromName("resource1"));
   }
 
   @Test
@@ -58,6 +82,8 @@ public class LockStepTest extends LockStepTestBase {
     j.assertLogContains("Lock released on resource [Label: label1]", b1);
     j.assertLogContains("Resource locked: resource1", b1);
     isPaused(b1, 1, 0);
+
+    assertNotNull(LockableResourcesManager.get().fromName("resource1"));
   }
 
   @Test
@@ -100,6 +126,10 @@ public class LockStepTest extends LockStepTestBase {
     SemaphoreStep.success("wait-inside/3", null);
     j.waitForMessage("Finish", b3);
     isPaused(b3, 1, 0);
+
+    assertNotNull(LockableResourcesManager.get().fromName("resource1"));
+    assertNotNull(LockableResourcesManager.get().fromName("resource2"));
+    assertNotNull(LockableResourcesManager.get().fromName("resource3"));
   }
 
   @Test
@@ -148,6 +178,10 @@ public class LockStepTest extends LockStepTestBase {
     SemaphoreStep.success("wait-inside/2", null);
     j.waitForMessage("Finish", b2);
     isPaused(b2, 1, 0);
+
+    assertNotNull(LockableResourcesManager.get().fromName("resource1"));
+    assertNotNull(LockableResourcesManager.get().fromName("resource2"));
+    assertNotNull(LockableResourcesManager.get().fromName("resource3"));
   }
 
   @Test
@@ -202,6 +236,10 @@ public class LockStepTest extends LockStepTestBase {
     j.waitForMessage("Finish", b3);
     isPaused(b2, 1, 0);
     isPaused(b3, 1, 0);
+
+    assertNotNull(LockableResourcesManager.get().fromName("resource1"));
+    assertNotNull(LockableResourcesManager.get().fromName("resource2"));
+    assertNotNull(LockableResourcesManager.get().fromName("resource3"));
   }
 
   @Test
@@ -306,6 +344,8 @@ public class LockStepTest extends LockStepTestBase {
 
     j.waitForMessage("[a] Lock acquired on [resource1]", b1);
     isPaused(b1, 2, 0);
+
+    assertNotNull(LockableResourcesManager.get().fromName("resource1"));
   }
 
   @Test
@@ -703,6 +743,10 @@ public class LockStepTest extends LockStepTestBase {
     SemaphoreStep.success("wait-inside-p3/1", null);
     j.waitForMessage("Finish", b3);
     isPaused(b3, 1, 0);
+
+    assertNotNull(LockableResourcesManager.get().fromName("resource1"));
+    assertNotNull(LockableResourcesManager.get().fromName("resource2"));
+    assertNotNull(LockableResourcesManager.get().fromName("resource3"));
   }
 
   @Test
@@ -773,5 +817,10 @@ public class LockStepTest extends LockStepTestBase {
     // Could be any 3 resources, so just check the beginning of the message
     j.assertLogContains("Resources locked: [resource", b2);
     isPaused(b2, 1, 0);
+
+    assertNotNull(LockableResourcesManager.get().fromName("resource1"));
+    assertNotNull(LockableResourcesManager.get().fromName("resource2"));
+    assertNotNull(LockableResourcesManager.get().fromName("resource3"));
+    assertNotNull(LockableResourcesManager.get().fromName("resource4"));
   }
 }

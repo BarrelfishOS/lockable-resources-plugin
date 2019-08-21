@@ -46,15 +46,15 @@ public class LockableResourcesRootAction implements RootAction {
 			Messages._LockableResourcesRootAction_ReservePermission_Description(), Jenkins.ADMINISTER,
 			PermissionScope.JENKINS);
 
+	public static final Permission VIEW = new Permission(PERMISSIONS_GROUP,
+			Messages.LockableResourcesRootAction_ViewPermission(),
+			Messages._LockableResourcesRootAction_ViewPermission_Description(), Jenkins.ADMINISTER,
+			PermissionScope.JENKINS);
+	
 	public static final String ICON = "/plugin/lockable-resources/img/device-24x24.png";
 
 	public String getIconFileName() {
-		if (User.current() != null) {
-			// only show if logged in
-			return ICON;
-		} else {
-			return null;
-		}
+		return (Jenkins.getInstance().hasPermission(VIEW)) ? ICON : null;
 	}
 
 	public String getUserName() {
@@ -70,7 +70,7 @@ public class LockableResourcesRootAction implements RootAction {
 	}
 
 	public String getUrlName() {
-		return "lockable-resources";
+		return (Jenkins.getInstance().hasPermission(VIEW)) ? "lockable-resources" : "";
 	}
 
 	public List<LockableResource> getResources() {
@@ -110,9 +110,11 @@ public class LockableResourcesRootAction implements RootAction {
 	public void doReserve(StaplerRequest req, StaplerResponse rsp)
 		throws IOException, ServletException {
 		Jenkins.getInstance().checkPermission(RESERVE);
-
+		///< Barrelfish Testing Infrastructure Extension	
 		String name = req.getParameter("resource");
 		String onBehalf = req.getParameter("for");
+		///< Barrelfish Testing Infrastructure Extension	
+
 		LockableResource r = LockableResourcesManager.get().fromName(name);
 		if (r == null) {
 			rsp.sendError(404, "Resource not found " + name);
@@ -122,12 +124,15 @@ public class LockableResourcesRootAction implements RootAction {
 		List<LockableResource> resources = new ArrayList<>();
 		resources.add(r);
 		String userName = getUserName();
-		if (userName != null)
+		if (userName != null) {
+			///< Barrelfish Testing Infrastructure Extension	
 			LockableResourcesManager.get().reserve(resources, userName, onBehalf);
-
+			///< Barrelfish Testing Infrastructure Extension	
+		}
 		rsp.forwardToPreviousPage(req);
 	}
 
+	///< Barrelfish Testing Infrastructure Extension	
 	public void doMultireserve(StaplerRequest req, StaplerResponse rsp)
 			throws IOException, ServletException {
 		Jenkins.getInstance().checkPermission(RESERVE);
@@ -154,41 +159,45 @@ public class LockableResourcesRootAction implements RootAction {
 
 		rsp.forwardToPreviousPage(req);
 	}
+	///< Barrelfish Testing Infrastructure Extension	
 
 	public void doUnreserve(StaplerRequest req, StaplerResponse rsp)
 		throws IOException, ServletException {
 		Jenkins.getInstance().checkPermission(RESERVE);
 
+		///< Barrelfish Testing Infrastructure Extension	
+		/// returns a list of names here!
 		String[] names = req.getParameterValues("resource");
 		if (names == null) {
 			rsp.sendError(404, "No resource supplied");
 			return;
 		}
 
-		List<LockableResource> resources = new ArrayList<LockableResource>();
-		resources.add(null);
 		String userName = getUserName();
-		if (userName == null)
-			throw new AccessDeniedException2(Jenkins.getAuthentication(),
-					RESERVE);
+		List<LockableResource> resources = new ArrayList<LockableResource>();
+
 		for (String name : names) {
 			LockableResource r = LockableResourcesManager.get().fromName(name);
 			if (r == null) {
 				rsp.sendError(404, "Resource not found " + name);
 				return;
 			}
-			resources.set(0, r);
-			if (userName.equals(r.getReservedBy()) ||
-			    Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER))
-				LockableResourcesManager.get().unreserve(resources);
 
-			//resources.add(r);
-			//LockableResourcesManager.get().unreserve(resources);
+			if ((userName == null || !userName.equals(r.getReservedBy()))
+				&& !Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER))
+			throw new AccessDeniedException2(Jenkins.getAuthentication(),
+					RESERVE);
+
+			resources.add(r);
 		}
+		
+		///< Barrelfish Testing Infrastructure Extension	
+		LockableResourcesManager.get().unreserve(resources);
 
 		rsp.forwardToPreviousPage(req);
 	}
 
+	///< Barrelfish Testing Infrastructure Extension	
 	public void doGetstate(StaplerRequest req, StaplerResponse rsp)
 		throws IOException, ServletException {
 		Jenkins.getInstance().checkPermission(RESERVE);
@@ -226,6 +235,7 @@ public class LockableResourcesRootAction implements RootAction {
 		resp.append(' ');
 		resp.append('}');
 	}
+	///< Barrelfish Testing Infrastructure Extension		
 
 	public void doReset(StaplerRequest req, StaplerResponse rsp)
 		throws IOException, ServletException {

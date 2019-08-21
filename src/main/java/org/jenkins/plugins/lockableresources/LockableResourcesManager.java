@@ -15,17 +15,14 @@ import hudson.model.Run;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+///< Barrelfish Testing Infrastructure Extension
 import java.text.SimpleDateFormat;
+///< Barrelfish Testing Infrastructure Extension
 
 import hudson.model.TaskListener;
 import jenkins.model.GlobalConfiguration;
@@ -42,7 +39,6 @@ import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.kohsuke.stapler.StaplerRequest;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import java.util.concurrent.ExecutionException;
 import javax.annotation.Nonnull;
 
 @Extension
@@ -69,6 +65,53 @@ public class LockableResourcesManager extends GlobalConfiguration {
 	public List<LockableResource> getResources() {
 		return resources;
 	}
+
+  public synchronized List<LockableResource> getDeclaredResources() {
+    ArrayList<LockableResource> declaredResources = new ArrayList<>();
+    for (LockableResource r : resources) {
+      if (!r.isEphemeral()) {
+        declaredResources.add(r);
+      }
+    }
+    return declaredResources;
+  }
+
+  public synchronized void setDeclaredResources(List<LockableResource> declaredResources) {
+    Map<String, LockableResource> lockedResources = new HashMap<>();
+    for (LockableResource r : this.resources) {
+      if (!r.isLocked()) continue;
+      lockedResources.put(r.getName(), r);
+    }
+
+    // Removed from configuration locks became ephemeral.
+    ArrayList<LockableResource> mergedResources = new ArrayList<>();
+    Set<String> addedLocks = new HashSet<>();
+    for (LockableResource r : declaredResources) {
+      if (!addedLocks.add(r.getName())) {
+        continue;
+      }
+      LockableResource locked = lockedResources.remove(r.getName());
+      if (locked != null) {
+        // Merge already locked lock.
+        locked.setDescription(r.getDescription());
+        locked.setLabels(r.getLabels());
+        locked.setEphemeral(false);
+        mergedResources.add(locked);
+        continue;
+      }
+      mergedResources.add(r);
+    }
+
+    for (LockableResource r : lockedResources.values()) {
+      // Removed locks became ephemeral.
+      r.setDescription("");
+      r.setLabels("");
+      r.setEphemeral(true);
+      mergedResources.add(r);
+    }
+
+    this.resources = mergedResources;
+  }
 
 	public List<LockableResource> getResourcesFromProject(String fullName) {
 		List<LockableResource> matching = new ArrayList<>();
@@ -324,19 +367,30 @@ public class LockableResourcesManager extends GlobalConfiguration {
 				}
 				LockStepExecution.proceed(resourceNames, context, logmessage, variable, inversePrecedence);
 			}
+      save();
 		}
-		save();
 		return !needToWait;
 	}
 
 	private synchronized void freeResources(List<String> unlockResourceNames, @Nullable Run<?, ?> build) {
 		for (String unlockResourceName : unlockResourceNames) {
-			for (LockableResource resource : this.resources) {
-				if (resource != null && resource.getName() != null && resource.getName().equals(unlockResourceName)) {
-					if (build == null || (resource.getBuild() != null && build.getExternalizableId().equals(resource.getBuild().getExternalizableId()))) {
+      Iterator<LockableResource> resourceIterator = this.resources.iterator();
+      while (resourceIterator.hasNext()) {
+        LockableResource resource = resourceIterator.next();
+        if (resource != null
+          && resource.getName() != null
+          && resource.getName().equals(unlockResourceName)) {
+          if (build == null
+            || (resource.getBuild() != null
+            && build
+            .getExternalizableId()
+            .equals(resource.getBuild().getExternalizableId()))) {
 						// No more contexts, unlock resource
 						resource.unqueue();
 						resource.setBuild(null);
+            if (resource.isEphemeral()) {
+              resourceIterator.remove();
+            }
 					}
 				}
 			}
@@ -495,7 +549,9 @@ public class LockableResourcesManager extends GlobalConfiguration {
 		if (name != null) {
 			LockableResource existent = fromName(name);
 			if (existent == null) {
-				getResources().add(new LockableResource(name));
+        LockableResource resource = new LockableResource(name);
+        resource.setEphemeral(true);
+        getResources().add(resource);
 				save();
 				return true;
 			}
@@ -507,9 +563,9 @@ public class LockableResourcesManager extends GlobalConfiguration {
 		if (name !=null && label !=null) {
 			LockableResource existent = fromName(name);
 			if (existent == null) {
-				LockableResource lr = new LockableResource(name);
-				lr.setLabels(label);
-				getResources().add(lr);
+				///< Barrelfish Testing Infrastructure Extension
+				getResources().add(new LockableResource(name, label));
+				///< Barrelfish Testing Infrastructure Extension
 				save();
 				return true;
 			}
@@ -518,27 +574,46 @@ public class LockableResourcesManager extends GlobalConfiguration {
 	}
 
 	public synchronized boolean reserve(List<LockableResource> resources,
+		///< Barrelfish Testing Infrastructure Extension
 			String userName, String onBehalf) {
+		///< Barrelfish Testing Infrastructure Extension
+
+		///< Barrelfish Testing Infrastructure Extension
 		String rt = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(Calendar.getInstance().getTime());
+		///< Barrelfish Testing Infrastructure Extension
+
 		for (LockableResource r : resources) {
+			///< Barrelfish Testing Infrastructure Extension
 			// XXX: we should distinguish between jobs and external scripts trying to reserve machines
 			if (r.isReserved() && onBehalf != null && !onBehalf.equals(r.getReservedOnBehalf())) {
 				r.setReservedOnBehalf(onBehalf);
 				r.setReservationTime(rt);
 			}
+			///< Barrelfish Testing Infrastructure Extension
+
 			if (r.isReserved() || r.isLocked() || r.isQueued()) {
 				return false;
 			}
 		}
+
 		for (LockableResource r : resources) {
 			r.setReservedBy(userName);
+			///< Barrelfish Testing Infrastructure Extension
+			/// set the resources to be reserved, add username, onbehalf and time
 			r.setReservationTime(rt);
 			if (onBehalf != null && !onBehalf.equals(userName))
 				r.setReservedOnBehalf(onBehalf);
+			///< Barrelfish Testing Infrastructure Extension
 		}
 		save();
 		return true;
 	}
+	
+	///< Barrelfish Testing Infrastructure Extension
+	public boolean reserve(List<LockableResource> resources, String userName) {
+		return reserve(resources, userName, userName);
+	}
+	///< Barrelfish Testing Infrastructure Extension
 
 	private void unreserveResources(@Nonnull List<LockableResource> resources) {
 		for (LockableResource l : resources) {
@@ -640,16 +715,9 @@ public class LockableResourcesManager extends GlobalConfiguration {
 	public boolean configure(StaplerRequest req, JSONObject json)
 			throws FormException {
 		try {
-			List<LockableResource> newResouces = req.bindJSONToList(
-					LockableResource.class, json.get("resources"));
-			for (LockableResource r : newResouces) {
-				LockableResource old = fromName(r.getName());
-				if (old != null) {
-					r.setBuild(old.getBuild());
-					r.setQueued(r.getQueueItemId(), r.getQueueItemProject());
-				}
-			}
-			resources = newResouces;
+      List<LockableResource> newResouces =
+          req.bindJSONToList(LockableResource.class, json.get("declaredResources"));
+      setDeclaredResources(newResouces);
 			save();
 			return true;
 		} catch (JSONException e) {

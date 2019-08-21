@@ -56,7 +56,9 @@ public class LockableResourceTest {
 
 	@Before
 	public void setUp() {
+		///< Barrelfish Testing Infrastructure Extension
 		this.instance = new LockableResource("r1", "d1", "l1 l2", "", "", "");
+		///< Barrelfish Testing Infrastructure Extension
 	}
 
 	@After

@@ -59,8 +59,11 @@ public class LockableResource extends AbstractDescribableImpl<LockableResource> 
 	private String description = "";
 	private String labels = "";
 	private String reservedBy = null;
+	private boolean ephemeral;
+	///< Barrelfish Testing Infrastructure Extension
 	private String reservationTime = null;
 	private String reservedOnBehalf = null;
+	///< Barrelfish Testing Infrastructure Extension
 
 	private long queueItemId = NOT_QUEUED;
 	private String queueItemProject = null;
@@ -80,13 +83,17 @@ public class LockableResource extends AbstractDescribableImpl<LockableResource> 
 	@Deprecated
 	public LockableResource(
 			String name, String description, String labels, String reservedBy,
+			///< Barrelfish Testing Infrastructure Extension
 			String reservationTime, String reservedOnBehalf) {
+			///< Barrelfish Testing Infrastructure Extension
 		this.name = name;
 		this.description = description;
 		this.labels = labels;
 		this.reservedBy = Util.fixEmptyAndTrim(reservedBy);
+		///< Barrelfish Testing Infrastructure Extension
 		this.reservationTime = Util.fixEmptyAndTrim(reservationTime);
 		this.reservedOnBehalf = Util.fixEmptyAndTrim(reservedOnBehalf);
+		///< Barrelfish Testing Infrastructure Extension
 	}
 
 	@Deprecated
@@ -136,6 +143,16 @@ public class LockableResource extends AbstractDescribableImpl<LockableResource> 
 	public String getLabels() {
 		return labels;
 	}
+
+  @DataBoundSetter
+  public void setEphemeral(boolean ephemeral) {
+    this.ephemeral = ephemeral;
+  }
+
+  @Exported
+  public boolean isEphemeral() {
+    return ephemeral;
+  }
 
 	public boolean isValidLabel(String candidate, Map<String, Object> params) {
 		return labelsContain(candidate);
@@ -318,8 +335,10 @@ public class LockableResource extends AbstractDescribableImpl<LockableResource> 
 
 	public void unReserve() {
 		this.reservedBy = null;
+		///< Barrelfish Testing Infrastructure Extension
 		this.reservationTime = null;
 		this.reservedOnBehalf = null;
+		///< Barrelfish Testing Infrastructure Extension
 	}
 
 	public void reset() {
@@ -358,6 +377,7 @@ public class LockableResource extends AbstractDescribableImpl<LockableResource> 
 		return true;
 	}
 
+	///< Barrelfish Testing Infrastructure Extension
 	public String getReservationTime() {
 		return reservationTime;
 	}
@@ -373,6 +393,7 @@ public class LockableResource extends AbstractDescribableImpl<LockableResource> 
 	public void setReservedOnBehalf(String reservedOnBehalf) {
 		this.reservedOnBehalf = reservedOnBehalf;
 	}
+	///< Barrelfish Testing Infrastructure Extension
 
 	@Extension
 	public static class DescriptorImpl extends Descriptor<LockableResource> {
